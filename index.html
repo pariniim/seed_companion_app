@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seed Companion App | Parent Transparency Portal</title>
+    <!-- Global JS Error Debugger -->
+    <script>
+        window.onerror = function(message, source, lineno, colno, error) {
+            const cleanSource = source ? source.split('/').pop() : 'Unknown';
+            alert(
+                "❌ JavaScript Initialization Error!\n\n" +
+                "Message: " + message + "\n" +
+                "File: " + cleanSource + "\n" +
+                "Line: " + lineno + " (Col: " + colno + ")\n\n" +
+                "Stack: " + (error ? error.stack : 'N/A')
+            );
+            return false;
+        };
+    </script>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="background-decorations">
+        <div class="blob-1"></div>
+        <div class="blob-2"></div>
+    </div>
+
+    <div class="dashboard-wrapper">
+        <!-- HEADER / NAVIGATION (Desktop Only, hidden on mobile) -->
+        <header class="desktop-header">
+            <div class="brand-logo">
+                <div class="logo-circle">🌱</div>
+                <div class="brand-text">
+                    <h1>Seed Companion</h1>
+                    <p>Parent Transparency & Insights Portal</p>
+                </div>
+            </div>
+            <div class="desktop-status-bar">
+                <span class="badge fw-version" id="js-load-status" style="background-color: rgba(239, 68, 68, 0.1); color: #ef4444; border-color: rgba(239, 68, 68, 0.2);">Script status: Loading...</span>
+                <span class="badge fw-version">Firmware v2.2.0</span>
+                <span class="badge status-connected" id="global-connection-badge">
+                    <span class="dot pulse"></span> Connected to Storybox
+                </span>
+            </div>
+        </header>
+
+        <!-- MAIN LAYOUT -->
+        <main class="main-layout">
+            
+            <!-- PHONE FRAME Mockup (Left/Center Pane) -->
+            <div class="phone-mockup-wrapper">
+                <div class="phone-bezel">
+                    <div class="phone-screen">
+                        <!-- Phone Status Bar -->
+                        <div class="phone-status-bar">
+                            <span class="phone-time" id="phone-time-display">12:30</span>
+                            <div class="phone-notch"></div>
+                            <div class="phone-signals">
+                                <svg class="icon-wifi" width="16" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12.55a11 11 0 0 1 14.08 0M1.42 9a16 16 0 0 1 21.16 0M8.53 16.11a5.5 5.5 0 0 1 6.95 0M12 20h.01"/></svg>
+                                <span class="battery-percent" id="phone-battery-display">85%</span>
+                                <div class="battery-icon">
+                                    <div class="battery-level" id="phone-battery-fill" style="width: 85%;"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- App Push Notification (Simulating stories pushed in real-time) -->
+                        <div class="app-notification-toast hidden" id="app-notification">
+                            <div class="notification-icon">✨</div>
+                            <div class="notification-content">
+                                <h4 id="notification-title">Story Started!</h4>
+                                <p id="notification-body">Liam has pressed START STORY on the device.</p>
+                            </div>
+                            <button class="btn-close-notification" id="btn-close-notification">×</button>
+                        </div>
+
+                        <!-- App Inner Container -->
+                        <div class="app-container">
+                            <!-- App Header Bar -->
+                            <div class="app-header-bar">
+                                <div class="app-header-title">
+                                    <span class="icon-seed">🌱</span>
+                                    <span class="logo-name">Seed</span>
+                                </div>
+                                <div class="device-mini-badge" id="app-device-badge">
+                                    <span class="status-dot green"></span>
+                                    <span class="device-name">Storybox</span>
+                                </div>
+                            </div>
+
+                            <!-- Screen Container (Scrollable) -->
+                            <div class="app-body">
+
+                                <!-- SCREEN 1: HOME SCREEN -->
+                                <section class="app-screen" id="screen-home">
+                                    <div class="welcome-section">
+                                        <h2>Welcome back, Sylvia! 👋</h2>
+                                        <p>Check in on Liam's storytelling adventures today.</p>
+                                    </div>
+
+                                    <!-- STORYBOX STATUS CARD -->
+                                    <div class="info-card connection-card">
+                                        <div class="card-header">
+                                            <h3>Storybox Status</h3>
+                                            <span class="status-indicator online" id="home-device-status-txt">Online</span>
+                                        </div>
+                                        <div class="status-grid">
+                                            <div class="status-item">
+                                                <span class="label">Battery</span>
+                                                <span class="val" id="status-val-battery">85%</span>
+                                            </div>
+                                            <div class="status-item">
+                                                <span class="label">Wi-Fi</span>
+                                                <span class="val" id="status-val-wifi">Strong</span>
+                                            </div>
+                                            <div class="status-item">
+                                                <span class="label">Device Volume</span>
+                                                <span class="val" id="status-val-volume">60%</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- CURRENT STORYBOX ACTIVITY -->
+                                    <div class="info-card activity-card">
+                                        <h3>Live Activity</h3>
+                                        <div class="live-status-container">
+                                            <!-- Ring visualization -->
+                                            <div class="live-ring-icon" id="home-live-ring">
+                                                <div class="inner-icon" id="home-live-icon">💤</div>
+                                            </div>
+                                            <div class="live-status-info">
+                                                <h4 id="home-live-status-title">Storybox is Idle</h4>
+                                                <p id="home-live-status-desc">No beads currently stacked. Child can insert food beads to play a story.</p>
+                                            </div>
+                                        </div>
+
+                                        <div class="bead-reading-display">
+                                            <h5>Current Bead Stack:</h5>
+                                            <div class="bead-indicator-pills">
+                                                <div class="bead-pill meat" id="home-pill-meat">
+                                                    <span class="dot"></span> Meat: <strong class="count">0</strong>
+                                                </div>
+                                                <div class="bead-pill veggies" id="home-pill-veggies">
+                                                    <span class="dot"></span> Veggies: <strong class="count">0</strong>
+                                                </div>
+                                                <div class="bead-pill grains" id="home-pill-grains">
+                                                    <span class="dot"></span> Grains: <strong class="count">0</strong>
+                                                </div>
+                                                <div class="bead-pill dairy" id="home-pill-dairy">
+                                                    <span class="dot"></span> Dairy: <strong class="count">0</strong>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- QUICK STATS & INSIGHT SHORTCUT -->
+                                    <div class="quick-stats-row">
+                                        <div class="stat-box">
+                                            <span class="num" id="stat-count-today">0</span>
+                                            <span class="label">Stories Today</span>
+                                        </div>
+                                        <div class="stat-box">
+                                            <span class="num" id="stat-count-favorites">0</span>
+                                            <span class="label">Favorites</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="home-insights-promo" id="home-insights-card">
+                                        <div class="insights-promo-content">
+                                            <h4>Weekly Nutrition Balance</h4>
+                                            <p id="home-insights-text">No stories recorded this week yet. Start simulating child play to see insights!</p>
+                                        </div>
+                                        <button class="btn-chevron" id="btn-go-to-insights">
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+                                        </button>
+                                    </div>
+                                </section>
+
+                                <!-- SCREEN 2: STORIES ARCHIVE -->
+                                <section class="app-screen hidden" id="screen-stories">
+                                    <div class="screen-header">
+                                        <h2>Story Archive</h2>
+                                        <p>Access and review all stories Liam has generated.</p>
+                                    </div>
+
+                                    <!-- Search and Filters -->
+                                    <div class="search-filter-container">
+                                        <div class="search-box-wrapper">
+                                            <input type="text" id="stories-search-input" placeholder="Search stories by title or character...">
+                                        </div>
+                                        <div class="filter-badges-container" id="filter-badges-bar">
+                                            <button class="filter-badge active" data-filter="all">All</button>
+                                            <button class="filter-badge" data-filter="meat">🍖 Meat</button>
+                                            <button class="filter-badge" data-filter="veggies">🥦 Veggies</button>
+                                            <button class="filter-badge" data-filter="grains">🌾 Grains</button>
+                                            <button class="filter-badge" data-filter="dairy">🥛 Dairy</button>
+                                            <button class="filter-badge" data-filter="fav">❤️ Favorites</button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Stories List -->
+                                    <div class="stories-list" id="archive-stories-list">
+                                        <!-- Dynamic stories will load here -->
+                                        <div class="empty-state" id="stories-empty-state">
+                                            <span class="empty-icon">📚</span>
+                                            <h4>No stories recorded</h4>
+                                            <p>Use the <strong>Storybox Simulator</strong> on the right to add beads and press <strong>START STORY</strong>. Stories will automatically sync here!</p>
+                                        </div>
+                                    </div>
+                                </section>
+
+                                <!-- SCREEN 3: NUTRITION INSIGHTS -->
+                                <section class="app-screen hidden" id="screen-insights">
+                                    <div class="screen-header">
+                                        <h2>Nutrition Insights</h2>
+                                        <p>Liam's dietary choices translated into storytelling play.</p>
+                                    </div>
+
+                                    <!-- DONUT CHART AND LEGEND -->
+                                    <div class="info-card chart-card">
+                                        <h3>Liam's Story Food Balance</h3>
+                                        <div class="chart-flex">
+                                            <div class="chart-container-donut">
+                                                <div class="donut-chart" id="insights-donut-chart" style="--meat-pct: 25%; --veggies-pct: 25%; --grains-pct: 25%; --dairy-pct: 25%;">
+                                                    <div class="donut-inner">
+                                                        <span class="donut-center-num" id="donut-total-beads">0</span>
+                                                        <span class="donut-center-label">Total Beads</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="chart-legend" id="chart-legend-list">
+                                                <div class="legend-item meat">
+                                                    <span class="bullet"></span>
+                                                    <span class="lbl">Meat/Fish</span>
+                                                    <span class="count" id="legend-count-meat">0 (0%)</span>
+                                                </div>
+                                                <div class="legend-item veggies">
+                                                    <span class="bullet"></span>
+                                                    <span class="lbl">Veggies/Fruits</span>
+                                                    <span class="count" id="legend-count-veggies">0 (0%)</span>
+                                                </div>
+                                                <div class="legend-item grains">
+                                                    <span class="bullet"></span>
+                                                    <span class="lbl">Grains</span>
+                                                    <span class="count" id="legend-count-grains">0 (0%)</span>
+                                                </div>
+                                                <div class="legend-item dairy">
+                                                    <span class="bullet"></span>
+                                                    <span class="lbl">Dairy</span>
+                                                    <span class="count" id="legend-count-dairy">0 (0%)</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- NUTRITIONAL COACH ASSESSMENT -->
+                                    <div class="info-card coach-card">
+                                        <div class="coach-header">
+                                            <span class="coach-avatar">🍎</span>
+                                            <h3>Parent Coach Assessment</h3>
+                                        </div>
+                                        <p id="coach-assessment-text" class="coach-text">
+                                            Story logs are empty. As Liam generates stories on the device using different combinations of nutrition beads, I will provide guidance on his food interest patterns and tips to encourage balanced choices.
+                                        </p>
+                                    </div>
+
+                                    <!-- MILESTONES / BADGES -->
+                                    <div class="info-card badges-card">
+                                        <h3>Milestone Badges</h3>
+                                        <div class="badges-grid">
+                                            <div class="badge-item locked" id="badge-first-story">
+                                                <div class="badge-icon">📖</div>
+                                                <div class="badge-info">
+                                                    <h4>First Chapter</h4>
+                                                    <p>Generate your first story</p>
+                                                </div>
+                                            </div>
+                                            <div class="badge-item locked" id="badge-rainbow-plate">
+                                                <div class="badge-icon">🌈</div>
+                                                <div class="badge-info">
+                                                    <h4>Rainbow Choice</h4>
+                                                    <p>Use all 4 bead groups in one story</p>
+                                                </div>
+                                            </div>
+                                            <div class="badge-item locked" id="badge-veggie-explorer">
+                                                <div class="badge-icon">🥦</div>
+                                                <div class="badge-info">
+                                                    <h4>Veggie Explorer</h4>
+                                                    <p>Generate 5 veggie-heavy stories</p>
+                                                </div>
+                                            </div>
+                                            <div class="badge-item locked" id="badge-perfect-balance">
+                                                <div class="badge-icon">⚖️</div>
+                                                <div class="badge-info">
+                                                    <h4>Perfect Harmony</h4>
+                                                    <p>Play a story with equal bead weights</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </section>
+
+                                <!-- SCREEN 4: SETTINGS SCREEN -->
+                                <section class="app-screen hidden" id="screen-settings">
+                                    <div class="screen-header">
+                                        <h2>Storybox Settings</h2>
+                                        <p>Configure Liam's physical device and parental locks.</p>
+                                    </div>
+
+                                    <!-- PARENTAL CONTROLS SECTION -->
+                                    <div class="settings-group">
+                                        <h3>Parental Controls</h3>
+                                        
+                                        <!-- Max Volume Limiter -->
+                                        <div class="setting-item">
+                                            <div class="setting-info">
+                                                <h4>Device Speaker Volume</h4>
+                                                <p>Limit the physical speaker loudness</p>
+                                            </div>
+                                            <div class="setting-control-slider">
+                                                <input type="range" id="settings-volume" min="10" max="100" value="60">
+                                                <span class="value-bubble" id="settings-volume-lbl">60%</span>
+                                            </div>
+                                        </div>
+
+                                        <!-- Narrator Voice -->
+                                        <div class="setting-item">
+                                            <div class="setting-info">
+                                                <h4>Story Narrator Voice</h4>
+                                                <p>Select voice style read by TTS</p>
+                                            </div>
+                                            <div class="setting-control-select">
+                                                <select id="settings-voice">
+                                                    <option value="FEMALE_WARM">Warm Female Voice</option>
+                                                    <option value="MALE_ADVENTURE">Adventurous Male Voice</option>
+                                                    <option value="FEMALE_SOFT">Soft Bedtime Voice</option>
+                                                    <option value="DEFAULT">Browser Default</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <!-- Bedtime Lock -->
+                                        <div class="setting-item">
+                                            <div class="setting-info">
+                                                <h4>Bedtime Story Limit</h4>
+                                                <p>Disable physical START button after hours</p>
+                                            </div>
+                                            <div class="setting-control-toggle">
+                                                <label class="switch-toggle">
+                                                    <input type="checkbox" id="settings-bedtime-toggle">
+                                                    <span class="slider-round"></span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="setting-sub-item hidden" id="settings-bedtime-hours-row">
+                                            <label for="settings-bedtime-time">Disable Storybox after:</label>
+                                            <input type="time" id="settings-bedtime-time" value="20:00">
+                                        </div>
+
+                                        <!-- Average Story Length -->
+                                        <div class="setting-item">
+                                            <div class="setting-info">
+                                                <h4>Target Story Length</h4>
+                                                <p>Configures narrative complexity</p>
+                                            </div>
+                                            <div class="setting-control-stepper">
+                                                <button class="step-btn" id="btn-len-minus">-</button>
+                                                <span class="step-val" id="settings-len-txt" data-val="medium">Medium</span>
+                                                <button class="step-btn" id="btn-len-plus">+</button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- DEVICE CONFIG & DIAGNOSTICS -->
+                                    <div class="settings-group">
+                                        <h3>Device Health & Setup</h3>
+
+                                        <!-- WiFi Setup -->
+                                        <div class="setting-card-accordion">
+                                            <div class="accordion-trigger" id="acc-wifi-trigger">
+                                                <span>📶 Wi-Fi Credentials</span>
+                                                <span class="arrow">▼</span>
+                                            </div>
+                                            <div class="accordion-content hidden" id="acc-wifi-content">
+                                                <div class="form-group">
+                                                    <label for="settings-wifi-ssid">Network Name (SSID)</label>
+                                                    <input type="text" id="settings-wifi-ssid" placeholder="e.g. HomeNet_2G">
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="settings-wifi-pass">Password</label>
+                                                    <input type="password" id="settings-wifi-pass" placeholder="••••••••">
+                                                </div>
+                                                <button class="btn-settings-action" id="btn-save-wifi">Push Wi-Fi to Device</button>
+                                            </div>
+                                        </div>
+
+                                        <!-- Diagnostics Readout -->
+                                        <div class="setting-card-accordion">
+                                            <div class="accordion-trigger" id="acc-diag-trigger">
+                                                <span>🔧 Sensor Calibration Logs</span>
+                                                <span class="arrow">▼</span>
+                                            </div>
+                                            <div class="accordion-content hidden" id="acc-diag-content">
+                                                <p class="diag-p">Direct analog ADC values from resistor ladders:</p>
+                                                <div class="diag-specs">
+                                                    <div class="spec-row">
+                                                        <span>Meat Slot (Pin A0)</span>
+                                                        <strong id="diag-adc-meat" class="font-mono">102 (0 beads)</strong>
+                                                    </div>
+                                                    <div class="spec-row">
+                                                        <span>Veggies Slot (Pin A1)</span>
+                                                        <strong id="diag-adc-veggies" class="font-mono">98 (0 beads)</strong>
+                                                    </div>
+                                                    <div class="spec-row">
+                                                        <span>Grains Slot (Pin A2)</span>
+                                                        <strong id="diag-adc-grains" class="font-mono">105 (0 beads)</strong>
+                                                    </div>
+                                                    <div class="spec-row">
+                                                        <span>Dairy Slot (Pin A3)</span>
+                                                        <strong id="diag-adc-dairy" class="font-mono">100 (0 beads)</strong>
+                                                    </div>
+                                                    <div class="spec-row">
+                                                        <span>CPU temperature</span>
+                                                        <strong id="diag-cpu-temp" class="font-mono">34.2 °C</strong>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- OTA Firmware update -->
+                                        <div class="ota-section">
+                                            <div class="ota-info">
+                                                <span>Installed: <strong>v2.2.0</strong></span>
+                                                <span id="ota-status-lbl">Storybox is up-to-date</span>
+                                            </div>
+                                            <button class="btn-settings-action secondary" id="btn-check-ota">Check OTA Updates</button>
+                                        </div>
+                                    </div>
+                                </section>
+
+                                <!-- DETAILED STORY VIEW OVERLAY (Slides in) -->
+                                <section class="app-screen-detail hidden" id="screen-story-detail">
+                                    <div class="detail-header">
+                                        <button class="btn-back" id="btn-close-detail">
+                                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg> Back
+                                        </button>
+                                        <button class="btn-fav-detail" id="detail-btn-fav">♡</button>
+                                    </div>
+
+                                    <div class="detail-scroll-content">
+                                        <div class="detail-character-avatar" id="detail-avatar">🐰</div>
+                                        <h2 class="detail-title" id="detail-title">Story Title</h2>
+                                        <div class="detail-meta">
+                                            <span class="detail-date" id="detail-date">June 19, 7:15 PM</span>
+                                            <span class="detail-wordcount" id="detail-wordcount">320 words</span>
+                                        </div>
+
+                                        <!-- Bead stack details -->
+                                        <div class="detail-beads" id="detail-bead-badges">
+                                            <!-- Dynamically injected bead badges -->
+                                        </div>
+
+                                        <!-- CUSTOM AUDIO PLAYER -->
+                                        <div class="detail-audio-player">
+                                            <div class="player-top">
+                                                <button class="btn-play-pause playing" id="player-play-btn">
+                                                    <!-- SVGs for Play and Pause toggled in CSS -->
+                                                    <svg class="play-svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                                                    <svg class="pause-svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+                                                </button>
+                                                <div class="player-status-wrapper">
+                                                    <span class="player-status" id="player-status-txt">Reading chapter out loud...</span>
+                                                    <div class="playback-speed-control">
+                                                        Speed:
+                                                        <select id="player-speed">
+                                                            <option value="0.75">0.75x</option>
+                                                            <option value="1.0" selected>1.0x</option>
+                                                            <option value="1.25">1.25x</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="player-canvas-container">
+                                                <canvas id="player-waveform" width="280" height="40"></canvas>
+                                            </div>
+                                        </div>
+
+                                        <!-- TRANSCRIPT TEXT -->
+                                        <div class="detail-transcript">
+                                            <h3>Story Transcript</h3>
+                                            <p id="detail-text-body">
+                                                Story content goes here...
+                                            </p>
+                                        </div>
+
+                                        <!-- DIETARY NUTRITIONAL INSIGHTS -->
+                                        <div class="detail-nutrition-card">
+                                            <div class="title-row">
+                                                <span class="icon">💡</span>
+                                                <h4>Story Nutrition Context</h4>
+                                            </div>
+                                            <p id="detail-nutrition-desc">
+                                                This story combination indicates Liam is interested in grains and dairy...
+                                            </p>
+                                        </div>
+
+                                        <!-- PARENT REFLECTIONS / NOTES -->
+                                        <div class="detail-notes-card">
+                                            <h4>Parent Notes</h4>
+                                            <p class="notes-desc">Write down what Liam liked or learned from this story:</p>
+                                            <textarea id="detail-notes-input" placeholder="e.g. Liam loved Barnaby Broccoli's treehouse, he asked to eat broccoli for dinner!"></textarea>
+                                            <span class="saved-indicator" id="notes-saved-lbl">Saved automatically</span>
+                                        </div>
+
+                                        <button class="btn-delete-story" id="detail-btn-delete">Delete Story from Archive</button>
+                                    </div>
+                                </section>
+                            </div>
+
+                            <!-- Bottom Navigation Tab Bar -->
+                            <nav class="app-nav-bar">
+                                <button class="nav-item active" data-target="screen-home">
+                                    <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                                    <span>Home</span>
+                                </button>
+                                <button class="nav-item" data-target="screen-stories">
+                                    <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M4 19.5A2.5 2.5 0 0 0 6.5 22H20M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5z"/></svg>
+                                    <span>Stories</span>
+                                </button>
+                                <button class="nav-item" data-target="screen-insights">
+                                    <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21.21 15.89A10 10 0 1 1 8 2.83M22 12A10 10 0 0 0 12 2v10z"/></svg>
+                                    <span>Insights</span>
+                                </button>
+                                <button class="nav-item" data-target="screen-settings">
+                                    <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                                    <span>Settings</span>
+                                </button>
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CHILD ARDUINO STORYBOX SIMULATOR (Right Pane) -->
+            <section class="simulator-wrapper">
+                <div class="sim-card">
+                    <div class="sim-header">
+                        <span class="badge sim-badge">Hardware Simulator</span>
+                        <h2>Child's Seed Storybox</h2>
+                        <p>Simulate placing beads and pressing the physical device buttons.</p>
+                    </div>
+
+                    <!-- Visual Board Graphic enclosure -->
+                    <div class="board-enclosure">
+                        <div class="wood-bezel">
+                            <div class="inner-plate">
+                                
+                                <!-- LED NeoPixel Ring simulation -->
+                                <div class="neopixel-ring-sim" id="sim-led-ring">
+                                    <div class="speaker-grille">
+                                        <div class="grille-pattern"></div>
+                                    </div>
+                                    <div class="led-dot" style="--angle: 0deg;"></div>
+                                    <div class="led-dot" style="--angle: 30deg;"></div>
+                                    <div class="led-dot" style="--angle: 60deg;"></div>
+                                    <div class="led-dot" style="--angle: 90deg;"></div>
+                                    <div class="led-dot" style="--angle: 120deg;"></div>
+                                    <div class="led-dot" style="--angle: 150deg;"></div>
+                                    <div class="led-dot" style="--angle: 180deg;"></div>
+                                    <div class="led-dot" style="--angle: 210deg;"></div>
+                                    <div class="led-dot" style="--angle: 240deg;"></div>
+                                    <div class="led-dot" style="--angle: 270deg;"></div>
+                                    <div class="led-dot" style="--angle: 300deg;"></div>
+                                    <div class="led-dot" style="--angle: 330deg;"></div>
+                                </div>
+
+                                <!-- Four Bead slots / Stepper inputs -->
+                                <div class="bead-slots-container">
+                                    
+                                    <!-- SLOT 1: MEAT (Red) -->
+                                    <div class="bead-slot-column" data-category="meat">
+                                        <span class="slot-label-icon">🍖</span>
+                                        <div class="slot-peg">
+                                            <div class="stacked-beads-indicator" id="sim-stack-meat">
+                                                <!-- Dynamic bead elements injected here -->
+                                            </div>
+                                        </div>
+                                        <span class="slot-title">Meat/Fish</span>
+                                        <div class="slot-controls">
+                                            <button class="btn-slot-step minus" data-category="meat">−</button>
+                                            <span class="slot-count-lbl" id="sim-count-meat">0</span>
+                                            <button class="btn-slot-step plus" data-category="meat">+</button>
+                                        </div>
+                                    </div>
+
+                                    <!-- SLOT 2: VEGGIES (Green) -->
+                                    <div class="bead-slot-column" data-category="veggies">
+                                        <span class="slot-label-icon">🥦</span>
+                                        <div class="slot-peg">
+                                            <div class="stacked-beads-indicator" id="sim-stack-veggies">
+                                                <!-- Dynamic bead elements injected here -->
+                                            </div>
+                                        </div>
+                                        <span class="slot-title">Veggies/Fruit</span>
+                                        <div class="slot-controls">
+                                            <button class="btn-slot-step minus" data-category="veggies">−</button>
+                                            <span class="slot-count-lbl" id="sim-count-veggies">0</span>
+                                            <button class="btn-slot-step plus" data-category="veggies">+</button>
+                                        </div>
+                                    </div>
+
+                                    <!-- SLOT 3: GRAINS (Gold) -->
+                                    <div class="bead-slot-column" data-category="grains">
+                                        <span class="slot-label-icon">🌾</span>
+                                        <div class="slot-peg">
+                                            <div class="stacked-beads-indicator" id="sim-stack-grains">
+                                                <!-- Dynamic bead elements injected here -->
+                                            </div>
+                                        </div>
+                                        <span class="slot-title">Grains</span>
+                                        <div class="slot-controls">
+                                            <button class="btn-slot-step minus" data-category="grains">−</button>
+                                            <span class="slot-count-lbl" id="sim-count-grains">0</span>
+                                            <button class="btn-slot-step plus" data-category="grains">+</button>
+                                        </div>
+                                    </div>
+
+                                    <!-- SLOT 4: DAIRY (Blue) -->
+                                    <div class="bead-slot-column" data-category="dairy">
+                                        <span class="slot-label-icon">🥛</span>
+                                        <div class="slot-peg">
+                                            <div class="stacked-beads-indicator" id="sim-stack-dairy">
+                                                <!-- Dynamic bead elements injected here -->
+                                            </div>
+                                        </div>
+                                        <span class="slot-title">Dairy</span>
+                                        <div class="slot-controls">
+                                            <button class="btn-slot-step minus" data-category="dairy">−</button>
+                                            <span class="slot-count-lbl" id="sim-count-dairy">0</span>
+                                            <button class="btn-slot-step plus" data-category="dairy">+</button>
+                                        </div>
+                                    </div>
+
+                                </div>
+
+                                <!-- Hardware control buttons -->
+                                <div class="hardware-buttons-row">
+                                    <button class="btn-hw btn-hw-start" id="sim-btn-start">
+                                        <span class="glow-effect"></span>
+                                        START STORY
+                                    </button>
+                                    <button class="btn-hw btn-hw-stop" id="sim-btn-stop">
+                                        STOP
+                                    </button>
+                                </div>
+
+                                <!-- Small Board Telemetry display -->
+                                <div class="board-telemetry-strip">
+                                    <div class="tel-item">
+                                        <span>Status:</span>
+                                        <strong id="sim-tel-status" class="tel-green">Idle</strong>
+                                    </div>
+                                    <div class="tel-item">
+                                        <span>Battery:</span>
+                                        <strong id="sim-tel-battery">85%</strong>
+                                    </div>
+                                    <div class="tel-item font-mono">
+                                        <span>RSSI:</span>
+                                        <strong id="sim-tel-rssi">-46 dBm</strong>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Simulator controls & logs -->
+                    <div class="sim-console-section">
+                        <div class="console-header">
+                            <h4>Storybox Device Output Logs</h4>
+                            <button class="btn-clear-sim-logs" id="btn-clear-sim-logs">Clear</button>
+                        </div>
+                        <div class="console-log-box" id="sim-console-output">
+                            <div class="log-line sys">[SYSTEM] Arduino UNO Q initialized.</div>
+                            <div class="log-line sys">[SYSTEM] Analog calibration completed. Telemetry broadcasting on WiFi.</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+        
+        <!-- Toggle button to open simulator on mobile devices -->
+        <button class="btn-mobile-sim-toggle" id="btn-mobile-sim-toggle">
+            <span class="icon">🎮</span> <span class="txt">Open Device Simulator</span>
+        </button>
+
+        <footer class="app-footer">
+            <p>Seed Storybox Companion Prototype &copy; 2026. Designed for parent transparency, nutrient tracking, and settings control.</p>
+        </footer>
+    </div>
+
+    <!-- Main Logic Script -->
+    <script src="app.js"></script>
+</body>
+</html>
