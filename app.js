@@ -1047,23 +1047,23 @@ Allowed alternatives: natural variation, gentle independence, loosely aligned pa
 Key rule: Group movement must feel organic, not choreographed. Even in cooperative scenes, actions should feel individual, soft, loosely aligned, and naturally supportive, never tightly coordinated.`;
 
     const userPrompt = `Generate a story matching the following configuration:
-- Meat/Fish Beads (Animal Characters): \${beads.meat}
-- Veggies/Fruits Beads (Plant Characters): \${beads.veggies}
-- Grains Beads (Grain Characters): \${beads.grains}
-- Dairy Beads (Dairy Characters): \${beads.dairy}
-- Target Story Length: \${appState.settings.storyLength}
-- Narrator Pacing Style: \${pacingType}
+- Meat/Fish Beads (Animal Characters): ${beads.meat}
+- Veggies/Fruits Beads (Plant Characters): ${beads.veggies}
+- Grains Beads (Grain Characters): ${beads.grains}
+- Dairy Beads (Dairy Characters): ${beads.dairy}
+- Target Story Length: ${appState.settings.storyLength}
+- Narrator Pacing Style: ${pacingType}
 
 Continuity Context (use this to continue the narrative world softly):
-\${prevStoryText}
+${prevStoryText}
 
 Return your response strictly as a JSON object with three keys:
 1. "title": The story title (string)
 2. "content": The story transcript (string, strictly 260-380 words adhering to the word count, character guidelines, softening patches, and moral closing)
-3. "insight": The parent-facing nutrition explanation context (string explaining the child's bead selection, why the pacing is \${pacingType}, and how it maps to their nutrition choices)
+3. "insight": The parent-facing nutrition explanation context (string explaining the child's bead selection, why the pacing is ${pacingType}, and how it maps to their nutrition choices)
 `;
 
-    const url = \`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=\${apiKey}\`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
     
     const response = await fetch(url, {
         method: "POST",
@@ -1090,15 +1090,15 @@ Return your response strictly as a JSON object with three keys:
 
     if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(\`Gemini API Error (status \${response.status}): \${errorText}\`);
+        throw new Error(`Gemini API Error (status ${response.status}): ${errorText}`);
     }
 
     const data = await response.json();
     const rawText = data.candidates[0].content.parts[0].text;
     
     let cleanedText = rawText.trim();
-    if (cleanedText.startsWith("\`\`\`")) {
-        cleanedText = cleanedText.replace(/^\`\`\`(json)?/, "").replace(/\`\`\`$/, "").trim();
+    if (cleanedText.startsWith("```")) {
+        cleanedText = cleanedText.replace(/^```(json)?/, "").replace(/```$/, "").trim();
     }
     
     const result = JSON.parse(cleanedText);
@@ -1127,7 +1127,7 @@ Return your response strictly as a JSON object with three keys:
     return {
         title: result.title,
         content: result.content,
-        wordCount: result.content.split(/\\s+/).filter(Boolean).length,
+        wordCount: result.content.split(/\s+/).filter(Boolean).length,
         pacing: pacingType,
         protagonist: characterMapLocal[dominantCat] || "Miss Broccoli",
         insight: result.insight
