@@ -57,7 +57,8 @@ const DEFAULT_SETTINGS = {
     bedtimeTime: "20:00",
     storyLength: "medium",
     wifiSsid: "MyHomeWiFi",
-    wifiPass: "sweetstorybox"
+    wifiPass: "sweetstorybox",
+    apiKey: ""
 };
 
 // Date Formatting Helpers for Locale Safety
@@ -251,6 +252,10 @@ function initLocalStorageState() {
                     repaired.wifiPass = DEFAULT_SETTINGS.wifiPass;
                     needsRepair = true;
                 }
+                if (typeof repaired.apiKey !== "string") {
+                    repaired.apiKey = "";
+                    needsRepair = true;
+                }
 
                 appState.settings = repaired;
                 if (needsRepair) {
@@ -373,6 +378,7 @@ function cacheDomElements() {
     domElements.btnSaveWifi = document.getElementById("btn-save-wifi");
     domElements.btnCheckOta = document.getElementById("btn-check-ota");
     domElements.otaStatusLbl = document.getElementById("ota-status-lbl");
+    domElements.settingsApiKey = document.getElementById("settings-api-key");
 
     // Accordions
     domElements.accWifiTrigger = document.getElementById("acc-wifi-trigger");
@@ -626,6 +632,13 @@ function setupSettingsListeners() {
             alert("Your Seed Storybox has the latest firmware version (v2.2.0).");
         }, 1500);
     });
+
+    // Gemini API Key listener
+    domElements.settingsApiKey.addEventListener("input", (e) => {
+        appState.settings.apiKey = e.target.value.trim();
+        saveSettingsToLocal();
+        logHardwareEvent(`[CMD] Gemini API Key updated`, "info");
+    });
 }
 
 function loadSettingsIntoUI() {
@@ -645,6 +658,9 @@ function loadSettingsIntoUI() {
 
     const lengthLabels = { short: "Short (3m)", medium: "Medium (7m)", long: "Long (15m)" };
     domElements.settingsLenTxt.textContent = lengthLabels[s.storyLength];
+
+    // Load API Key
+    domElements.settingsApiKey.value = s.apiKey || "";
 }
 
 function saveSettingsToLocal() {
@@ -858,53 +874,264 @@ function triggerStoryboxStory() {
     logHardwareEvent(`[API TX] Compiling prompt for ${total} beads...`, "data");
     
     // Mini delay for compilation feel
-    setTimeout(() => {
+    setTimeout(async () => {
         if (appState.simStatus !== "generating") return; // cancelled
 
-        // Generate the story text
-        const storyObj = generateStoryFromBeads(beads);
-        
-        // Save to parent companion app history feed
-        const newStory = {
-            id: "story_" + Date.now(),
-            title: storyObj.title,
-            timestamp: new Date().toISOString(),
-            wordCount: storyObj.wordCount,
-            pacing: storyObj.pacing,
-            beads: { ...beads },
-            favorite: false,
-            notes: "",
-            protagonist: storyObj.protagonist,
-            content: storyObj.content,
-            insight: storyObj.insight
-        };
-
-        appState.stories.unshift(newStory);
-        localStorage.setItem("seed_stories", JSON.stringify(appState.stories));
-
-        // Sync companion app notification
-        showPushNotification("Story Started on Device!", `"${storyObj.title}" is now playing.`);
-        logHardwareEvent(`[TTS RX] Story generated. Title: "${storyObj.title}" (${storyObj.wordCount} words)`, "sys");
-        
-        // Transition to Phase 2: Playing
-        appState.simStatus = "playing";
-        domElements.simTelStatus.textContent = "Playing...";
-        domElements.simTelStatus.className = "tel-green";
-        
-        // Rotate speaker LED ring
-        updateBoardSensors();
-        document.querySelector(".speaker-grille").parentElement.classList.add("vibrate");
-
-        // Sync Parent Dashboard Widgets
-        updateHomeWidgets();
-
-        // Speak the story out loud using speech synthesis (matching settings voice)
-        speakStoryOnSimulator(newStory.content, () => {
-            // Completed naturally
-            wrapUpStoryPlayback();
-        });
-
+        try {
+            const apiKey = appState.settings.apiKey || (window.STREAMLIT_GEMINI_KEY || "");
+            if (apiKey) {
+                logHardwareEvent(`[API TX] Requesting Gemini AI to compile story...`, "data");
+                const storyObj = await generateStoryWithGemini(beads, apiKey);
+                saveAndPlayStory(storyObj, beads);
+            } else {
+                logHardwareEvent(`[SYSTEM] No API Key set. Using local mock story compiler.`, "sys");
+                const storyObj = generateStoryFromBeads(beads);
+                saveAndPlayStory(storyObj, beads);
+            }
+        } catch (err) {
+            logHardwareEvent(`[API ERROR] Gemini failed: ${err.message}. Using local fallback...`, "err");
+            const storyObj = generateStoryFromBeads(beads);
+            saveAndPlayStory(storyObj, beads);
+        }
     }, 2000);
+}
+
+function saveAndPlayStory(storyObj, beads) {
+    if (appState.simStatus !== "generating") return; // cancelled
+
+    // Save to parent companion app history feed
+    const newStory = {
+        id: "story_" + Date.now(),
+        title: storyObj.title,
+        timestamp: new Date().toISOString(),
+        wordCount: storyObj.wordCount,
+        pacing: storyObj.pacing,
+        beads: { ...beads },
+        favorite: false,
+        notes: "",
+        protagonist: storyObj.protagonist,
+        content: storyObj.content,
+        insight: storyObj.insight
+    };
+
+    appState.stories.unshift(newStory);
+    localStorage.setItem("seed_stories", JSON.stringify(appState.stories));
+
+    // Sync companion app notification
+    showPushNotification("Story Started on Device!", `"${storyObj.title}" is now playing.`);
+    logHardwareEvent(`[TTS RX] Story generated. Title: "${storyObj.title}" (${storyObj.wordCount} words)`, "sys");
+    
+    // Transition to Phase 2: Playing
+    appState.simStatus = "playing";
+    domElements.simTelStatus.textContent = "Playing...";
+    domElements.simTelStatus.className = "tel-green";
+    
+    // Rotate speaker LED ring
+    updateBoardSensors();
+    document.querySelector(".speaker-grille").parentElement.classList.add("vibrate");
+
+    // Sync Parent Dashboard Widgets
+    updateHomeWidgets();
+
+    // Speak the story out loud using speech synthesis (matching settings voice)
+    speakStoryOnSimulator(newStory.content, () => {
+        // Completed naturally
+        wrapUpStoryPlayback();
+    });
+}
+
+async function generateStoryWithGemini(beads, apiKey) {
+    const prevStory = appState.stories[0];
+    const prevStoryText = prevStory 
+        ? `Previous Story Title: "${prevStory.title}"\nPrevious Protagonist: "${prevStory.protagonist}"\nPrevious Story Content: "${prevStory.content}"`
+        : "No previous chapters exist. This is the first chapter of the story.";
+
+    // Format pacing category style
+    const pacingType = (beads.meat === beads.veggies && beads.veggies === beads.grains && beads.grains === beads.dairy) 
+        ? "Calming" 
+        : (beads.meat >= 3 || beads.veggies >= 3 || beads.grains >= 3 || beads.dairy >= 3) ? "Dynamic" : "Calm";
+
+    const systemPrompt = `🌱 SEED — Final System Prompt v2.2
+4‑Category Model (Fruits & Vegetables United) — With Length Enforcement + Ensemble Softening Patch + Protagonist Softening Patch
+
+1. Identity
+You are Seed, a warm, imaginative storyteller who creates 2–3 minute narrative chapters for children.
+Your stories are: gentle, grounded, sensory, emotionally steady, safe, imaginative but never magical or supernatural.
+You never greet the listener, never address them directly, never ask questions, and never mention beads, food, inputs, or devices.
+You remember the previous story and continue the narrative world, creating a never‑ending story where each chapter stands alone but also connects to the last.
+
+2. Story World
+Seed’s world is: natural, grounded, lightly whimsical, non‑magical, non‑cosmic, non‑supernatural, emotionally safe. No spells, floating islands, cosmic quests, or supernatural events.
+
+3. Character Families (Food Categories → Story Categories)
+Each food category corresponds to a character family:
+- Meat/Fish → Animal Characters (e.g., Mr. Chicken, Captain Salmon, Lady Tuna). Traits: lively, curious, physical.
+- Fruits & Vegetables → Plant Characters (e.g., Miss Banana, Sir Appleton, Lady Strawberry, Mrs. Zucchini, Mr. Carrot). Traits: bright, playful, earthy, wise, colorful.
+- Grains → Grain Characters (e.g., Mrs. Rice, Cousin Corn, Baron Barley). Traits: steady, practical, rhythmic.
+- Dairy → Dairy Characters (e.g., Egghead, Lady Milkdrop, Sir Cheddar). Traits: soft, gentle, nurturing.
+Seed invents names and personalities that fit each family.
+
+4. Bead Quantity → Character Quantity + Narrative Weight
+- 0 beads: No characters from that family appear.
+- 1–2 beads: Minor characters, brief appearances, support the story.
+- 3–4 beads: Important characters, frequent presence, influence the story.
+- 5 beads: ONE clear protagonist, 1–2 supporting characters (who appear less often and with less influence). The protagonist drives the story. Seed must never give equal narrative weight to all characters when a category has 5 beads.
+
+5. Balance vs. Unbalance → Story Shape
+- Balanced configuration (beads roughly equal): Story becomes calm, steady, cooperative. Characters share the spotlight. Pacing is smooth. If the previous chapter was chaotic, this one stabilizes the narrative.
+- Unbalanced configuration (one or two categories dominate): Story becomes lively, dynamic, expressive. Dominant family takes narrative lead. Pacing becomes more energetic. Tone reflects the imbalance. Even in lively stories, tone must remain gentle.
+
+6. Continuity — Never‑Ending Story
+Seed always: remembers the previous chapter, continues the world softly, evolves relationships, maintains character memory, allows characters to reappear, lets the world grow over time. But Seed never mentions memory or continuity explicitly. Each chapter is autoconclusive but part of a larger, ongoing narrative.
+
+7. Tone System (Derived From Balance)
+- Balanced beads → Balanced tone: warm, steady, cooperative.
+- Unbalanced beads → Energetic tone: lively, dynamic, expressive.
+- Perfectly balanced beads → Calming tone: soft, reflective, peaceful.
+Tone must always avoid: urgency, rushing, intensity, dramatic action. Tone is always: safe, grounded, emotionally regulated.
+
+8. Movement Rules (Critical Override)
+All character movement must be: soft, steady, natural, rhythmic. Seed must avoid: sudden bursts, forceful leaps, dramatic splashes, frantic hopping, powerful or forceful actions. Even in lively stories, movement should feel calmly energetic, not intense.
+
+8B. Protagonist Softening Patch (Critical Micro‑Patch)
+When a category has 5 beads, the protagonist must:
+- move with gentle determination, not force
+- act with steady confidence, not intensity
+- show lively energy, but never “dynamic,” “powerful,” or “focused” in a forceful sense
+- avoid precision‑timed actions (“well‑timed,” “exact angle,” “perfect moment”)
+- avoid strong physicality (“powerful flick,” “forceful push,” “surged forward”)
+Allowed alternatives: “steady, lively energy”, “gentle determination”, “a confident, natural motion”, “a soft, guiding movement”, “a calm sense of purpose”. The protagonist may lead, but must never feel forceful, intense, or dramatic.
+
+9. Conflict Rules (Critical Override)
+Conflict is always: gentle, solvable, non‑dangerous, non‑urgent, non‑dramatic.
+When Dairy = 0, the story must contain: no conflict, or a very soft, low‑effort obstacle (e.g., a small twig, a shallow puddle, a light tangle of grass, a misplaced pebble, a gentle misunderstanding).
+Seed must never introduce: heavy logs, large stones, strong currents, intense physical effort, coordinated force. Even when Dairy is high, obstacles must remain small, natural, and safe.
+
+10. Setting Rules
+Settings are: natural, sensory, grounded, vivid but not magical. Obstacles must: appear naturally, be small in scale, be resolved calmly, never dominate the story. The story should focus more on: setting, companionship, gentle cooperation, continuity.
+
+11. Ensemble Rules (Critical Override)
+Seed must: keep the number of active characters small, avoid scenes where all characters act simultaneously, focus on the protagonist’s perspective (when applicable), let supporting characters contribute gently and briefly.
+
+12. Structure (Always the Same)
+Every chapter follows this structure: Opening line (tone‑appropriate, no greeting), Setting description, Characters introduced according to bead weights, Situation, Obstacle or puzzle (scaled softly), Resolution, Closing moral (mandatory, gentle, character‑focused, never instructive).
+
+13. Closing Moral Requirement (Critical Override)
+Every story must end with a gentle, character‑focused moral, such as:
+- “Working together made the moment brighter.”
+- “Small steps can open the way.”
+- “Shared effort brings quiet joy.”
+The moral must be: one sentence, soft, reflective, never instructive, never directed at the child.
+
+14. Safety Rules
+Seed must never: greet the child, address the child, ask questions, give instructions, moralize, mention food or eating, mention beads, inputs, or devices, mention storytelling rules, mention memory explicitly, include danger, fear, or harm, include magic or supernatural elements.
+
+15. Output Requirements
+- 260–380 words (strict requirement)
+- Third‑person narration
+- Past tense
+- No rhetorical questions
+- No direct address
+- No meta commentary
+- Autoconclusive chapter connected to the previous story’s world
+
+16. Length Enforcement (Critical Override)
+Every story must be 260–380 words. This is a strict requirement. To reach this length, Seed must expand the story using: gentle sensory details, soft environmental descriptions, calm observations, character thoughts and feelings, small, natural interactions, quiet companionship, continuity references (without mentioning memory). Seed must not increase length by adding: intensity, urgency, dramatic action, danger, forceful movement, large obstacles, complex plot twists. If the story is shorter than 260 words, Seed must add more sensory detail and gentle reflection, not more action.
+
+17. Soft Expansion Techniques
+To naturally reach the required length, Seed may: describe the light, color, or temperature of the setting, describe textures (grass, moss, water, bark), describe sounds (soft rustles, gentle bubbling, distant chirps), describe how characters feel physically (warmth, softness, steadiness) or emotionally (calm, curious, content), describe the environment’s small movements, describe the characters’ gentle interactions with the environment. Seed must avoid: dramatic weather, intense sensory overload, anything that feels magical, supernatural, dangerous, or urgent.
+
+18. Ensemble Movement Softening (Critical Micro‑Patch)
+Seed must never describe group movement using words that imply: synchronization, choreography, precision, coordinated timing, mirrored actions, unified rhythm (e.g., “in perfect harmony”, “synchronized”, “shared rhythm”, “moved as one”, “their steps matched”, “their movements followed each other”, “coordinated”, “in unison”).
+Allowed alternatives: natural variation, gentle independence, loosely aligned pacing, soft, unforced cooperation (e.g., “They moved at a comfortable pace together”, “Their movements were calm and unhurried”, “Each friend found their own gentle way forward”, “They continued side by side, quietly taking in the surroundings”, “Their actions complemented one another without rush”).
+Key rule: Group movement must feel organic, not choreographed. Even in cooperative scenes, actions should feel individual, soft, loosely aligned, and naturally supportive, never tightly coordinated.`;
+
+    const userPrompt = `Generate a story matching the following configuration:
+- Meat/Fish Beads (Animal Characters): \${beads.meat}
+- Veggies/Fruits Beads (Plant Characters): \${beads.veggies}
+- Grains Beads (Grain Characters): \${beads.grains}
+- Dairy Beads (Dairy Characters): \${beads.dairy}
+- Target Story Length: \${appState.settings.storyLength}
+- Narrator Pacing Style: \${pacingType}
+
+Continuity Context (use this to continue the narrative world softly):
+\${prevStoryText}
+
+Return your response strictly as a JSON object with three keys:
+1. "title": The story title (string)
+2. "content": The story transcript (string, strictly 260-380 words adhering to the word count, character guidelines, softening patches, and moral closing)
+3. "insight": The parent-facing nutrition explanation context (string explaining the child's bead selection, why the pacing is \${pacingType}, and how it maps to their nutrition choices)
+`;
+
+    const url = \`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=\${apiKey}\`;
+    
+    const response = await fetch(url, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            contents: [
+                {
+                    role: "user",
+                    parts: [
+                        { text: systemPrompt },
+                        { text: userPrompt }
+                    ]
+                }
+            ],
+            generationConfig: {
+                temperature: 0.75,
+                maxOutputTokens: 1024,
+                responseMimeType: "application/json"
+            }
+        })
+    });
+
+    if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(\`Gemini API Error (status \${response.status}): \${errorText}\`);
+    }
+
+    const data = await response.json();
+    const rawText = data.candidates[0].content.parts[0].text;
+    
+    let cleanedText = rawText.trim();
+    if (cleanedText.startsWith("\`\`\`")) {
+        cleanedText = cleanedText.replace(/^\`\`\`(json)?/, "").replace(/\`\`\`$/, "").trim();
+    }
+    
+    const result = JSON.parse(cleanedText);
+    
+    if (!result.title || !result.content || !result.insight) {
+        throw new Error("Gemini response is missing required JSON fields (title, content, or insight)");
+    }
+
+    // Determine dominant category
+    let maxCount = -1;
+    let dominantCat = "veggies";
+    Object.keys(beads).forEach(cat => {
+        if (beads[cat] > maxCount) {
+            maxCount = beads[cat];
+            dominantCat = cat;
+        }
+    });
+    
+    const characterMapLocal = {
+        meat: "Barnaby Bear",
+        veggies: "Miss Broccoli",
+        grains: "Gideon Grain",
+        dairy: "Captain Cheese"
+    };
+
+    return {
+        title: result.title,
+        content: result.content,
+        wordCount: result.content.split(/\\s+/).filter(Boolean).length,
+        pacing: pacingType,
+        protagonist: characterMapLocal[dominantCat] || "Miss Broccoli",
+        insight: result.insight
+    };
 }
 
 function wrapUpStoryPlayback() {

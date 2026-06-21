@@ -39,6 +39,17 @@ def load_standalone_html():
     with open(os.path.join(base_dir, "app.js"), "r", encoding="utf-8") as f:
         js = f.read()
 
+    # Read secrets if available
+    gemini_key = ""
+    try:
+        gemini_key = st.secrets.get("GEMINI_API_KEY", "")
+    except Exception:
+        pass # Secrets not configured yet or running locally
+
+    # Inject key into the global window scope
+    injection_script = f'<script>window.STREAMLIT_GEMINI_KEY = "{gemini_key}";</script></head>'
+    html = html.replace('</head>', injection_script)
+
     # Inline CSS (Replace external stylesheet reference)
     css_link = '<link rel="stylesheet" href="style.css">'
     inline_css = f"<style>\n{css}\n</style>"
