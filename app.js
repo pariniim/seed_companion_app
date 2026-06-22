@@ -565,7 +565,7 @@ function setupSettingsListeners() {
 
     // Story Length Stepper
     const lengths = ["short", "medium", "long"];
-    const lengthLabels = { short: "Short (3m)", medium: "Medium (7m)", long: "Long (15m)" };
+    const lengthLabels = { short: "Short (2m)", medium: "Medium (4m)", long: "Long (6m)" };
 
     domElements.btnLenPlus.addEventListener("click", () => {
         const currIdx = lengths.indexOf(appState.settings.storyLength);
@@ -656,7 +656,7 @@ function loadSettingsIntoUI() {
         domElements.settingsBedtimeHoursRow.classList.add("hidden");
     }
 
-    const lengthLabels = { short: "Short (3m)", medium: "Medium (7m)", long: "Long (15m)" };
+    const lengthLabels = { short: "Short (2m)", medium: "Medium (4m)", long: "Long (6m)" };
     domElements.settingsLenTxt.textContent = lengthLabels[s.storyLength];
 
     // Load API Key
@@ -951,11 +951,21 @@ async function generateStoryWithGemini(beads, apiKey) {
         ? "Calming" 
         : (beads.meat >= 3 || beads.veggies >= 3 || beads.grains >= 3 || beads.dairy >= 3) ? "Dynamic" : "Calm";
 
+    let durationText = "4-minute";
+    let wordCountRange = "400–500";
+    if (appState.settings.storyLength === "short") {
+        durationText = "2-minute";
+        wordCountRange = "200–280";
+    } else if (appState.settings.storyLength === "long") {
+        durationText = "6-minute";
+        wordCountRange = "650–800";
+    }
+
     const systemPrompt = `🌱 SEED — Final System Prompt v2.2
 4‑Category Model (Fruits & Vegetables United) — With Length Enforcement + Ensemble Softening Patch + Protagonist Softening Patch
 
 1. Identity
-You are Seed, a warm, imaginative storyteller who creates 2–3 minute narrative chapters for children.
+You are Seed, a warm, imaginative storyteller who creates ${durationText} narrative chapters for children.
 Your stories are: gentle, grounded, sensory, emotionally steady, safe, imaginative but never magical or supernatural.
 You never greet the listener, never address them directly, never ask questions, and never mention beads, food, inputs, or devices.
 You remember the previous story and continue the narrative world, creating a never‑ending story where each chapter stands alone but also connects to the last.
@@ -988,7 +998,7 @@ Seed always: remembers the previous chapter, continues the world softly, evolves
 - Balanced beads → Balanced tone: warm, steady, cooperative.
 - Unbalanced beads → Energetic tone: lively, dynamic, expressive.
 - Perfectly balanced beads → Calming tone: soft, reflective, peaceful.
-Tone must always avoid: urgency, rushing, intensity, dramatic action. Tone is always: safe, grounded, emotionally regulated.
+- Tone must always avoid: urgency, rushing, intensity, dramatic action. Tone is always: safe, grounded, emotionally regulated.
 
 8. Movement Rules (Critical Override)
 All character movement must be: soft, steady, natural, rhythmic. Seed must avoid: sudden bursts, forceful leaps, dramatic splashes, frantic hopping, powerful or forceful actions. Even in lively stories, movement should feel calmly energetic, not intense.
@@ -1000,7 +1010,7 @@ When a category has 5 beads, the protagonist must:
 - show lively energy, but never “dynamic,” “powerful,” or “focused” in a forceful sense
 - avoid precision‑timed actions (“well‑timed,” “exact angle,” “perfect moment”)
 - avoid strong physicality (“powerful flick,” “forceful push,” “surged forward”)
-Allowed alternatives: “steady, lively energy”, “gentle determination”, “a confident, natural motion”, “a soft, guiding movement”, “a calm sense of purpose”. The protagonist may lead, but must never feel forceful, intense, or dramatic.
+- Allowed alternatives: “steady, lively energy”, “gentle determination”, “a confident, natural motion”, “a soft, guiding movement”, “a calm sense of purpose”. The protagonist may lead, but must never feel forceful, intense, or dramatic.
 
 9. Conflict Rules (Critical Override)
 Conflict is always: gentle, solvable, non‑dangerous, non‑urgent, non‑dramatic.
@@ -1021,13 +1031,13 @@ Every story must end with a gentle, character‑focused moral, such as:
 - “Working together made the moment brighter.”
 - “Small steps can open the way.”
 - “Shared effort brings quiet joy.”
-The moral must be: one sentence, soft, reflective, never instructive, never directed at the child.
+- The moral must be: one sentence, soft, reflective, never instructive, never directed at the child.
 
 14. Safety Rules
 Seed must never: greet the child, address the child, ask questions, give instructions, moralize, mention food or eating, mention beads, inputs, or devices, mention storytelling rules, mention memory explicitly, include danger, fear, or harm, include magic or supernatural elements.
 
 15. Output Requirements
-- 260–380 words (strict requirement)
+- ${wordCountRange} words (strict requirement)
 - Third‑person narration
 - Past tense
 - No rhetorical questions
@@ -1036,7 +1046,7 @@ Seed must never: greet the child, address the child, ask questions, give instruc
 - Autoconclusive chapter connected to the previous story’s world
 
 16. Length Enforcement (Critical Override)
-Every story must be 260–380 words. This is a strict requirement. To reach this length, Seed must expand the story using: gentle sensory details, soft environmental descriptions, calm observations, character thoughts and feelings, small, natural interactions, quiet companionship, continuity references (without mentioning memory). Seed must not increase length by adding: intensity, urgency, dramatic action, danger, forceful movement, large obstacles, complex plot twists. If the story is shorter than 260 words, Seed must add more sensory detail and gentle reflection, not more action.
+Every story must be ${wordCountRange} words. This is a strict requirement. To reach this length, Seed must expand the story using: gentle sensory details, soft environmental descriptions, calm observations, character thoughts and feelings, small, natural interactions, quiet companionship, continuity references (without mentioning memory). Seed must not increase length by adding: intensity, urgency, dramatic action, danger, forceful movement, large obstacles, complex plot twists. If the story is shorter than ${wordCountRange.split("–")[0]} words, Seed must add more sensory detail and gentle reflection, not more action.
 
 17. Soft Expansion Techniques
 To naturally reach the required length, Seed may: describe the light, color, or temperature of the setting, describe textures (grass, moss, water, bark), describe sounds (soft rustles, gentle bubbling, distant chirps), describe how characters feel physically (warmth, softness, steadiness) or emotionally (calm, curious, content), describe the environment’s small movements, describe the characters’ gentle interactions with the environment. Seed must avoid: dramatic weather, intense sensory overload, anything that feels magical, supernatural, dangerous, or urgent.
@@ -1059,7 +1069,7 @@ ${prevStoryText}
 
 Return your response strictly as a JSON object with three keys:
 1. "title": The story title (string)
-2. "content": The story transcript (string, strictly 260-380 words adhering to the word count, character guidelines, softening patches, and moral closing)
+2. "content": The story transcript (string, strictly ${wordCountRange} words adhering to the word count, character guidelines, softening patches, and moral closing)
 3. "insight": The parent-facing nutrition explanation context (string explaining the child's bead selection, why the pacing is ${pacingType}, and how it maps to their nutrition choices)
 `;
 
@@ -2032,6 +2042,7 @@ function generateStoryFromBeads(beads) {
     const resolution = resolutions[Math.floor(Math.random() * resolutions.length)];
 
     // Mandatory gentle moral
+    // Mandatory gentle moral
     let moral = "";
     if (pacingType === "Dynamic") {
         const dynamicMorals = [
@@ -2053,24 +2064,122 @@ function generateStoryFromBeads(beads) {
         moral = normalMorals[Math.floor(Math.random() * normalMorals.length)];
     }
 
-    let paragraph = opening + setting + introduction + situation + obstacle + resolution + moral;
+    // Target story length mapping: short ~210w, medium ~410w, long ~660w
+    let targetMinWords = 210;
+    if (appState.settings.storyLength === "medium") {
+        targetMinWords = 410;
+    } else if (appState.settings.storyLength === "long") {
+        targetMinWords = 660;
+    }
 
-    // Word Count Enforcement padding (Target 260-380 words)
-    let words = paragraph.split(/\s+/).filter(Boolean);
-    const sensoryExpansions = [
-        "The yellow buttercups swayed gently in the meadow breeze, their petals catching the soft light.",
-        "A small grey squirrel sat on a nearby branch, watching their progress with quiet curiosity.",
-        "The damp soil smelled earthy and sweet, reminding them of the early spring rain.",
-        "They paused for a moment to watch a tiny ladybug crawl slowly across a smooth, flat leaf.",
-        "The sound of the brook was a comforting murmur that filled the silent gaps in their journey."
+    const settingExpansions = [
+        "The sun rose a bit higher, casting long, soft shadows across the damp moss and ferns.",
+        "Dewdrops sparkled on the ferns, reflecting the soft morning sky in tiny, clear beads of clean water.",
+        "The sky above was a soft, pale blue, dotted with a few thin clouds that drifted slowly like feathers.",
+        "A fresh scent of moss and wet leaves filled the valley, clean and soothing to breathe.",
+        "They noticed the way the moss grew thicker on the north side of the tree trunks, like soft, green velvet coats.",
+        "A light green canopy of leaves rustled softly overhead, providing a cool and comfortable shade for the traveling friends.",
+        "The forest path wound gently around the old stone walls, where tiny green shoots were beginning to peek through.",
+        "A cool, pleasant breeze swept through the valley, bringing the crisp, clean scent of the pine-covered hills.",
+        "High above, the leaves of the birch trees shimmered in the sunlight, looking like tiny silver coins spinning in the wind.",
+        "The soft earth under the trees was covered in a thick blanket of brown pine needles and dry oak leaves."
     ];
 
-    let expIdx = 0;
-    while (words.length < 265 && expIdx < sensoryExpansions.length) {
-        paragraph = paragraph.replace(moral, sensoryExpansions[expIdx] + " " + moral);
-        words = paragraph.split(/\s+/).filter(Boolean);
-        expIdx++;
+    const characterExpansions = [
+        "They took slow, deliberate breaths of the fresh forest air, listening to the gentle rustling of the tree canopy above.",
+        "They walked at an unhurried, comfortable pace, matching their steps to the steady beat of the wind in the branches.",
+        "Each friend felt a quiet sense of comfort and protection, knowing they were exploring this beautiful day together.",
+        "They walked along the grassy edge one by one, watching their steps so they wouldn't disturb the soft green moss.",
+        "They enjoyed the quiet companionable silence, listening to the rhythm of their own slow, steady footsteps.",
+        "They enjoyed the feel of the cool air and the smell of the damp earth as they walked side by side.",
+        "Every step they took together was slow and steady, allowing them to enjoy the simple pleasure of each other's company.",
+        "They paused to adjust their pace, making sure they remained close together on the narrow, winding dirt trail.",
+        "The friends exchanged gentle, knowing glances, happy to share this quiet and peaceful walk through the ancient woods.",
+        "They moved forward with an easy, unforced coordination, each helping the other find the most comfortable path."
+    ];
+
+    const observationExpansions = [
+        "A small grey squirrel sat on a nearby branch, watching their progress with quiet curiosity.",
+        "They paused for a moment to watch a tiny ladybug crawl slowly across a smooth, flat leaf.",
+        "A tiny blue butterfly landed softly on a nearby dandelion, resting its wings before fluttering away into the tall grass.",
+        "They paused to watch the ripples in the creek, where tiny fish swam in gentle, unhurried circles.",
+        "They stopped to smell the sweet, earthy aroma of wild strawberries growing in the shelter of a mossy rock.",
+        "They watched the water ripple gently around a mossy log, carrying tiny twigs down the slow, peaceful stream.",
+        "A family of tiny forest mice scurried quietly through the dry leaves, searching for fallen seeds and acorns.",
+        "They observed a busy line of ants carrying small pieces of green leaves back to their nest under the roots.",
+        "In the distance, a mother deer stood quietly in the tall grass, watching them with calm, dark eyes before turning away.",
+        "They noticed a small, beautifully shaped pinecone resting on a bed of bright green moss near the path."
+    ];
+
+    const reflectionExpansions = [
+        "The yellow buttercups swayed gently in the meadow breeze, their petals catching the soft light.",
+        "The sound of the brook was a comforting murmur that filled the silent gaps in their journey.",
+        "A warm draft carried the rich, earthy scent of pine needles and damp bark across the winding forest path.",
+        "They sat down on a warm, flat log to rest for a moment, enjoying the soft warmth of the sun as it filtered through the branches.",
+        "The sound of the wind in the pines was like a gentle whisper, guiding them forward with a quiet promise.",
+        "The scent of wild clover was sweet and clean, drifting across the clearing on a light, warm breeze.",
+        "The warmth of the sun on their shoulders was a comforting reminder of the quiet joy of being outside in the fresh air.",
+        "A gentle peace seemed to wrap around the forest, making every small sound feel safe, steady, and close.",
+        "A gentle wind rustled the dry leaves on the forest floor, making a sound like soft paper brushing together.",
+        "The soft light of the late afternoon began to paint the tree trunks in warm shades of orange and gold.",
+        "They felt a deep sense of contentment, appreciating the simple beauty of the forest and the steady ground beneath them.",
+        "The quiet forest seemed to breathe with them, filled with a steady, calming rhythm that made all worries drift away."
+    ];
+
+    // Distribute expansions dynamically to preserve story structure
+    let expandedSetting = setting;
+    let expandedIntroduction = introduction;
+    let expandedObstacle = obstacle;
+    let expandedResolution = resolution;
+    let expandedBeforeMoral = "";
+
+    let words = (opening + expandedSetting + expandedIntroduction + situation + expandedObstacle + expandedResolution + expandedBeforeMoral + moral).split(/\s+/).filter(Boolean);
+
+    let setIdx = 0, charIdx = 0, obsIdx = 0, refIdx = 0;
+    const maxIterations = 100; // prevent safety infinite loops
+    let iter = 0;
+
+    while (words.length < targetMinWords && iter < maxIterations) {
+        let added = false;
+
+        // 1. Setting details
+        if (words.length < targetMinWords) {
+            expandedSetting += " " + settingExpansions[setIdx % settingExpansions.length];
+            setIdx++;
+            added = true;
+            words = (opening + expandedSetting + expandedIntroduction + situation + expandedObstacle + expandedResolution + expandedBeforeMoral + moral).split(/\s+/).filter(Boolean);
+        }
+
+        // 2. Character interaction details
+        if (words.length < targetMinWords) {
+            expandedIntroduction += " " + characterExpansions[charIdx % characterExpansions.length];
+            charIdx++;
+            added = true;
+            words = (opening + expandedSetting + expandedIntroduction + situation + expandedObstacle + expandedResolution + expandedBeforeMoral + moral).split(/\s+/).filter(Boolean);
+        }
+
+        // 3. Environmental observation details
+        if (words.length < targetMinWords) {
+            expandedObstacle += " " + observationExpansions[obsIdx % observationExpansions.length];
+            obsIdx++;
+            added = true;
+            words = (opening + expandedSetting + expandedIntroduction + situation + expandedObstacle + expandedResolution + expandedBeforeMoral + moral).split(/\s+/).filter(Boolean);
+        }
+
+        // 4. Calm reflection details
+        if (words.length < targetMinWords) {
+            expandedBeforeMoral += reflectionExpansions[refIdx % reflectionExpansions.length] + " ";
+            refIdx++;
+            added = true;
+            words = (opening + expandedSetting + expandedIntroduction + situation + expandedObstacle + expandedResolution + expandedBeforeMoral + moral).split(/\s+/).filter(Boolean);
+        }
+
+        if (!added) break;
+        iter++;
     }
+
+    const paragraph = opening + expandedSetting + expandedIntroduction + situation + expandedObstacle + expandedResolution + expandedBeforeMoral + moral;
+    words = paragraph.split(/\s+/).filter(Boolean);
 
     // Build Title
     const titles = {
