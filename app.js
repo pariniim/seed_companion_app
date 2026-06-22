@@ -407,7 +407,7 @@ function cacheDomElements() {
     domElements.simBtnStop = document.getElementById("sim-btn-stop");
     domElements.simTelStatus = document.getElementById("sim-tel-status");
     domElements.simTelBattery = document.getElementById("sim-tel-battery");
-    domElements.simTelRssi = document.getElementById("sim-tel-rssi");
+    domElements.simTelSignal = document.getElementById("sim-tel-signal");
     domElements.simConsoleOutput = document.getElementById("sim-console-output");
     domElements.btnClearSimLogs = document.getElementById("btn-clear-sim-logs");
 
@@ -473,6 +473,32 @@ function switchScreen(screenId) {
     }
 }
 
+// Map RSSI dbm value to signal text states
+function updateWifiSignalDisplay() {
+    const rssi = appState.simWifiRssi;
+    let label = "Good";
+    if (rssi >= -40) label = "Excellent";
+    else if (rssi >= -60) label = "Good";
+    else if (rssi >= -75) label = "Fair";
+    else if (rssi >= -85) label = "Weak";
+    else label = "No Connection";
+
+    if (domElements.simTelSignal) {
+        domElements.simTelSignal.textContent = label;
+        if (label === "No Connection") {
+            domElements.simTelSignal.className = "tel-red";
+        } else if (label === "Weak") {
+            domElements.simTelSignal.className = "tel-orange";
+        } else {
+            domElements.simTelSignal.className = "";
+        }
+    }
+    
+    if (domElements.statusValWifi) {
+        domElements.statusValWifi.textContent = label;
+    }
+}
+
 // Update Phone status bar time & battery
 function startPhoneSystemSimulation() {
     const updateTime = () => {
@@ -488,6 +514,10 @@ function startPhoneSystemSimulation() {
         domElements.phoneBatteryFill.style.width = `${appState.simBattery}%`;
         domElements.statusValBattery.textContent = `${appState.simBattery}%`;
         domElements.simTelBattery.textContent = `${appState.simBattery}%`;
+
+        // Match Wifi Signal
+        appState.simWifiRssi = -46 + Math.floor(Math.random() * 5) - 2;
+        updateWifiSignalDisplay();
     };
 
     updateTime();
