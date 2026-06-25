@@ -1778,7 +1778,7 @@ function animateAudioWaveform() {
         }
 
         ctx.clearRect(0, 0, w, h);
-        ctx.strokeStyle = "#5B8266"; // Brand sage green color
+        ctx.strokeStyle = "#F08A5D"; // Brand soft orange color
         ctx.lineWidth = 2;
 
         phase += 0.25;
@@ -1798,7 +1798,7 @@ function animateAudioWaveform() {
 
         // Underneath glow line
         ctx.beginPath();
-        ctx.strokeStyle = "rgba(91, 130, 102, 0.15)";
+        ctx.strokeStyle = "rgba(240, 138, 93, 0.15)";
         ctx.moveTo(0, h / 2);
         ctx.lineTo(w, h / 2);
         ctx.stroke();
