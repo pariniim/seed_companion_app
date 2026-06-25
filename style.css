@@ -2038,19 +2038,21 @@ input:checked + .slider-round:before {
 }
 
 .btn-hw-stop {
-    background: linear-gradient(135deg, #ff6b6b 0%, #d63031 100%);
+    background: linear-gradient(135deg, #3ba0ce 0%, #247fa7 100%);
     color: #ffffff;
     flex-grow: 1;
-    border: 1px solid #961b1c;
-    box-shadow: 0 6px 12px rgba(214, 48, 49, 0.25);
+    border: 1px solid #1e698a;
+    box-shadow: 0 6px 12px rgba(36, 127, 167, 0.25), inset 0 1px 2px rgba(255,255,255,0.25);
 }
 
 .btn-hw-stop:hover {
     transform: translateY(-1px);
+    box-shadow: 0 8px 16px rgba(36, 127, 167, 0.35);
 }
 
 .btn-hw-stop:active {
     transform: translateY(1px);
+    box-shadow: 0 3px 6px rgba(36, 127, 167, 0.15);
 }
 
 .btn-hw:disabled {
