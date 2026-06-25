@@ -510,7 +510,7 @@ button {
 
 /* Device Status Card */
 .connection-card {
-    border-left: 4px solid var(--color-veggies);
+    border-left: 4px solid var(--brand-primary);
 }
 
 .connection-card .card-header {
@@ -533,8 +533,8 @@ button {
 }
 
 .status-indicator.online {
-    background-color: var(--brand-primary-light);
-    color: var(--brand-primary);
+    background-color: rgba(91, 130, 102, 0.1);
+    color: #5B8266;
 }
 
 .status-indicator.offline {
