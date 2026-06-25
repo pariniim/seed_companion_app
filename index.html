@@ -23,6 +23,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <link rel="icon" type="image/png" href="logo_icon.png">
 </head>
 <body>
     <div class="background-decorations">
@@ -34,11 +35,7 @@
         <!-- HEADER / NAVIGATION (Desktop Only, hidden on mobile) -->
         <header class="desktop-header">
             <div class="brand-logo">
-                <div class="logo-circle">🌱</div>
-                <div class="brand-text">
-                    <h1>Seed Companion</h1>
-                    <p>Parent Transparency & Insights Portal</p>
-                </div>
+                <img src="logo_full.png" alt="Seed Logo" style="height: 42px; width: auto; object-fit: contain;">
             </div>
             <div class="desktop-status-bar">
                 <span class="badge fw-version" id="js-load-status" style="background-color: rgba(239, 68, 68, 0.1); color: #ef4444; border-color: rgba(239, 68, 68, 0.2);">Script status: Loading...</span>
@@ -84,8 +81,7 @@
                             <!-- App Header Bar -->
                             <div class="app-header-bar">
                                 <div class="app-header-title">
-                                    <span class="icon-seed">🌱</span>
-                                    <span class="logo-name">Seed</span>
+                                    <img src="logo_full.png" alt="Seed" style="height: 20px; width: auto; object-fit: contain; vertical-align: middle;">
                                 </div>
                                 <div class="device-mini-badge" id="app-device-badge">
                                     <span class="status-dot green"></span>
@@ -570,141 +566,149 @@
                     </div>
 
                     <!-- Visual Board Graphic enclosure -->
-                    <div class="board-enclosure">
-                        <div class="wood-bezel">
-                            <div class="inner-plate">
+                                            <div class="inner-plate">
                                 
-                                <!-- LED NeoPixel Ring simulation -->
-                                <div class="neopixel-ring-sim" id="sim-led-ring">
-                                    <div class="speaker-grille">
-                                        <div class="grille-pattern"></div>
+                                <!-- LED Area (Left Panel) -->
+                                <div class="sim-panel-section led-section">
+                                    <div class="neopixel-ring-sim" id="sim-led-ring">
+                                        <div class="led-dot" style="--angle: 0deg;"></div>
+                                        <div class="led-dot" style="--angle: 30deg;"></div>
+                                        <div class="led-dot" style="--angle: 60deg;"></div>
+                                        <div class="led-dot" style="--angle: 90deg;"></div>
+                                        <div class="led-dot" style="--angle: 120deg;"></div>
+                                        <div class="led-dot" style="--angle: 150deg;"></div>
+                                        <div class="led-dot" style="--angle: 180deg;"></div>
+                                        <div class="led-dot" style="--angle: 210deg;"></div>
+                                        <div class="led-dot" style="--angle: 240deg;"></div>
+                                        <div class="led-dot" style="--angle: 270deg;"></div>
+                                        <div class="led-dot" style="--angle: 300deg;"></div>
+                                        <div class="led-dot" style="--angle: 330deg;"></div>
                                     </div>
-                                    <div class="led-dot" style="--angle: 0deg;"></div>
-                                    <div class="led-dot" style="--angle: 30deg;"></div>
-                                    <div class="led-dot" style="--angle: 60deg;"></div>
-                                    <div class="led-dot" style="--angle: 90deg;"></div>
-                                    <div class="led-dot" style="--angle: 120deg;"></div>
-                                    <div class="led-dot" style="--angle: 150deg;"></div>
-                                    <div class="led-dot" style="--angle: 180deg;"></div>
-                                    <div class="led-dot" style="--angle: 210deg;"></div>
-                                    <div class="led-dot" style="--angle: 240deg;"></div>
-                                    <div class="led-dot" style="--angle: 270deg;"></div>
-                                    <div class="led-dot" style="--angle: 300deg;"></div>
-                                    <div class="led-dot" style="--angle: 330deg;"></div>
+                                    <span class="section-label">LED STATUS</span>
                                 </div>
 
-                                <!-- Four Bead slots / Stepper inputs -->
-                                <div class="bead-slots-container">
-                                    
-                                    <!-- SLOT 1: MEAT (Red) -->
-                                    <div class="bead-slot-column" data-category="meat">
-                                        <span class="slot-label-icon">🍖</span>
-                                        <div class="slot-peg">
-                                            <div class="stacked-beads-indicator" id="sim-stack-meat">
-                                                <!-- Dynamic bead elements injected here -->
+                                <!-- Beads Area (Middle Panel) -->
+                                <div class="sim-panel-section beads-section">
+                                    <!-- Four Bead slots / Stepper inputs -->
+                                    <div class="bead-slots-container">
+                                        <!-- SLOT 1: MEAT (Red) -->
+                                        <div class="bead-slot-column" data-category="meat">
+                                            <span class="slot-label-icon">🍖</span>
+                                            <div class="slot-peg">
+                                                <div class="stacked-beads-indicator" id="sim-stack-meat">
+                                                    <!-- Dynamic bead elements injected here -->
+                                                </div>
+                                            </div>
+                                            <span class="slot-title">Meat/Fish</span>
+                                            <div class="slot-controls">
+                                                <button class="btn-slot-step minus" data-category="meat">−</button>
+                                                <span class="slot-count-lbl" id="sim-count-meat">0</span>
+                                                <button class="btn-slot-step plus" data-category="meat">+</button>
                                             </div>
                                         </div>
-                                        <span class="slot-title">Meat/Fish</span>
-                                        <div class="slot-controls">
-                                            <button class="btn-slot-step minus" data-category="meat">−</button>
-                                            <span class="slot-count-lbl" id="sim-count-meat">0</span>
-                                            <button class="btn-slot-step plus" data-category="meat">+</button>
+
+                                        <!-- SLOT 2: VEGGIES (Green) -->
+                                        <div class="bead-slot-column" data-category="veggies">
+                                            <span class="slot-label-icon">🥦</span>
+                                            <div class="slot-peg">
+                                                <div class="stacked-beads-indicator" id="sim-stack-veggies">
+                                                    <!-- Dynamic bead elements injected here -->
+                                                </div>
+                                            </div>
+                                            <span class="slot-title">Veggies/Fruit</span>
+                                            <div class="slot-controls">
+                                                <button class="btn-slot-step minus" data-category="veggies">−</button>
+                                                <span class="slot-count-lbl" id="sim-count-veggies">0</span>
+                                                <button class="btn-slot-step plus" data-category="veggies">+</button>
+                                            </div>
+                                        </div>
+
+                                        <!-- SLOT 3: GRAINS (Gold) -->
+                                        <div class="bead-slot-column" data-category="grains">
+                                            <span class="slot-label-icon">🌾</span>
+                                            <div class="slot-peg">
+                                                <div class="stacked-beads-indicator" id="sim-stack-grains">
+                                                    <!-- Dynamic bead elements injected here -->
+                                                </div>
+                                            </div>
+                                            <span class="slot-title">Grains</span>
+                                            <div class="slot-controls">
+                                                <button class="btn-slot-step minus" data-category="grains">−</button>
+                                                <span class="slot-count-lbl" id="sim-count-grains">0</span>
+                                                <button class="btn-slot-step plus" data-category="grains">+</button>
+                                            </div>
+                                        </div>
+
+                                        <!-- SLOT 4: DAIRY (Blue) -->
+                                        <div class="bead-slot-column" data-category="dairy">
+                                            <span class="slot-label-icon">🥛</span>
+                                            <div class="slot-peg">
+                                                <div class="stacked-beads-indicator" id="sim-stack-dairy">
+                                                    <!-- Dynamic bead elements injected here -->
+                                                </div>
+                                            </div>
+                                            <span class="slot-title">Dairy</span>
+                                            <div class="slot-controls">
+                                                <button class="btn-slot-step minus" data-category="dairy">−</button>
+                                                <span class="slot-count-lbl" id="sim-count-dairy">0</span>
+                                                <button class="btn-slot-step plus" data-category="dairy">+</button>
+                                            </div>
                                         </div>
                                     </div>
 
-                                    <!-- SLOT 2: VEGGIES (Green) -->
-                                    <div class="bead-slot-column" data-category="veggies">
-                                        <span class="slot-label-icon">🥦</span>
-                                        <div class="slot-peg">
-                                            <div class="stacked-beads-indicator" id="sim-stack-veggies">
-                                                <!-- Dynamic bead elements injected here -->
-                                            </div>
-                                        </div>
-                                        <span class="slot-title">Veggies/Fruit</span>
-                                        <div class="slot-controls">
-                                            <button class="btn-slot-step minus" data-category="veggies">−</button>
-                                            <span class="slot-count-lbl" id="sim-count-veggies">0</span>
-                                            <button class="btn-slot-step plus" data-category="veggies">+</button>
-                                        </div>
+                                    <!-- Hardware control buttons -->
+                                    <div class="hardware-buttons-row">
+                                        <button class="btn-hw btn-hw-start" id="sim-btn-start">
+                                            <span class="glow-effect"></span>
+                                            START STORY
+                                        </button>
+                                        <button class="btn-hw btn-hw-stop" id="sim-btn-stop">
+                                            STOP
+                                        </button>
                                     </div>
 
-                                    <!-- SLOT 3: GRAINS (Gold) -->
-                                    <div class="bead-slot-column" data-category="grains">
-                                        <span class="slot-label-icon">🌾</span>
-                                        <div class="slot-peg">
-                                            <div class="stacked-beads-indicator" id="sim-stack-grains">
-                                                <!-- Dynamic bead elements injected here -->
-                                            </div>
+                                    <!-- Small Board Telemetry display -->
+                                    <div class="board-telemetry-strip">
+                                        <div class="tel-item">
+                                            <span>Status:</span>
+                                            <strong id="sim-tel-status" class="tel-green">Idle</strong>
                                         </div>
-                                        <span class="slot-title">Grains</span>
-                                        <div class="slot-controls">
-                                            <button class="btn-slot-step minus" data-category="grains">−</button>
-                                            <span class="slot-count-lbl" id="sim-count-grains">0</span>
-                                            <button class="btn-slot-step plus" data-category="grains">+</button>
+                                        <div class="tel-item">
+                                            <span>Battery:</span>
+                                            <strong id="sim-tel-battery">85%</strong>
                                         </div>
-                                    </div>
-
-                                    <!-- SLOT 4: DAIRY (Blue) -->
-                                    <div class="bead-slot-column" data-category="dairy">
-                                        <span class="slot-label-icon">🥛</span>
-                                        <div class="slot-peg">
-                                            <div class="stacked-beads-indicator" id="sim-stack-dairy">
-                                                <!-- Dynamic bead elements injected here -->
-                                            </div>
-                                        </div>
-                                        <span class="slot-title">Dairy</span>
-                                        <div class="slot-controls">
-                                            <button class="btn-slot-step minus" data-category="dairy">−</button>
-                                            <span class="slot-count-lbl" id="sim-count-dairy">0</span>
-                                            <button class="btn-slot-step plus" data-category="dairy">+</button>
+                                        <div class="tel-item font-mono">
+                                            <span>Signal:</span>
+                                            <strong id="sim-tel-signal">Good</strong>
                                         </div>
                                     </div>
-
                                 </div>
 
-                                <!-- Hardware control buttons -->
-                                <div class="hardware-buttons-row">
-                                    <button class="btn-hw btn-hw-start" id="sim-btn-start">
-                                        <span class="glow-effect"></span>
-                                        START STORY
-                                    </button>
-                                    <button class="btn-hw btn-hw-stop" id="sim-btn-stop">
-                                        STOP
-                                    </button>
-                                </div>
-
-                                <!-- Small Board Telemetry display -->
-                                <div class="board-telemetry-strip">
-                                    <div class="tel-item">
-                                        <span>Status:</span>
-                                        <strong id="sim-tel-status" class="tel-green">Idle</strong>
-                                    </div>
-                                    <div class="tel-item">
-                                        <span>Battery:</span>
-                                        <strong id="sim-tel-battery">85%</strong>
-                                    </div>
-                                    <div class="tel-item font-mono">
-                                        <span>Signal:</span>
-                                        <strong id="sim-tel-signal">Good</strong>
+                                <!-- Speaker Area (Right Panel) -->
+                                <div class="sim-panel-section speaker-section">
+                                    <div class="speaker-grille-container">
+                                        <div class="speaker-grille">
+                                            <div class="grille-pattern"></div>
+                                        </div>
+                                        <span class="section-label">SPEAKER</span>
                                     </div>
                                 </div>
 
                             </div>
-                        </div>
-                    </div>
 
-                    <!-- Simulator controls & logs -->
-                    <div class="sim-console-section">
-                        <div class="console-header">
-                            <h4>Storybox Device Output Logs</h4>
-                            <button class="btn-clear-sim-logs" id="btn-clear-sim-logs">Clear</button>
-                        </div>
-                        <div class="console-log-box" id="sim-console-output">
-                            <div class="log-line sys">[SYSTEM] Arduino UNO Q initialized.</div>
-                            <div class="log-line sys">[SYSTEM] Analog calibration completed. Telemetry broadcasting on WiFi.</div>
+                            <!-- Hidden Device Output Console to prevent JS errors -->
+                            <div class="sim-console-section" style="display: none !important;">
+                                <div class="console-header">
+                                    <h4>Storybox Console Logs</h4>
+                                    <button class="btn-clear-sim-logs" id="btn-clear-sim-logs">Clear</button>
+                                </div>
+                                <div class="console-log-box" id="sim-console-output">
+                                    <div class="log-line sys">[SYSTEM] Storybox simulator initialized.</div>
+                                </div>
+                            </div>
+
                         </div>
                     </div>
-                </div>
             </section>
 
         </main>
